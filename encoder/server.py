@@ -2,6 +2,9 @@ import logging
 import asyncio
 from aiohttp import web
 
+logging.basicConfig(level=logging.INFO, format="%(asctime)s\t%(levelname)s\t%(message)s")
+logger = logging.getLogger("encoder")
+
 async def healthcheck(request):
     logger.info("healthcheck %s", request)
     return web.Response(body=b"OK\n")
@@ -24,8 +27,3 @@ def main(host, port):
     logger.info("up at %s:%d", host, port)
     web.run_app(app, host=host, port=port, print=None)
     logger.info("down")
-
-if __name__ == '__main__':
-    logging.basicConfig(level=logging.INFO, format="%(asctime)s\t%(levelname)s\t%(message)s")
-    logger = logging.getLogger("encoder")
-    main("0.0.0.0", 8080)
