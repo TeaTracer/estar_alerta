@@ -7,7 +7,7 @@ async def healthcheck(request):
     return web.Response(body=b"OK\n")
 
 async def on_shutdown(app):
-    logger.info("handle shutdown")
+    logger.info("handle shutdown %s", app)
 
 async def task(request):
     logger.info("task %s", request)
