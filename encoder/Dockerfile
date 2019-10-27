@@ -1,5 +1,7 @@
 FROM python:3.8
 
+RUN apt-get update && apt install -y ffmpeg=7:4.1.4-1~deb10u1
+
 COPY requirenments.txt /app/
 
 WORKDIR /app

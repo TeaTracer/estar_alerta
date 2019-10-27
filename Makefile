@@ -2,7 +2,7 @@ lint:
 	pylint3 encoder
 
 run:
-	python3 -m encoder
+	docker run -p 8080:8080 encoder
 
 docker:
 	docker build -f encoder/Dockerfile -t encoder encoder/

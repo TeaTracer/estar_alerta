@@ -1,5 +1,6 @@
 import logging
 import asyncio
+import json
 from aiohttp import web
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s\t%(levelname)s\t%(message)s")
@@ -14,8 +15,34 @@ async def on_shutdown(app):
 
 async def task(request):
     logger.info("task %s", request)
-    await asyncio.sleep(1)
+    try:
+        data = await request.json()
+        command = data["command"]
+        if not isinstance(command, str):
+            raise TypeError("task command should be str, not {}".format(type(command)))
+    except (TypeError, json.JSONDecodeError) as error:
+        logger.error(error)
+        return web.Response(body=b"ERROR: " + repr(error).encode("utf-8") + b"\n", status=400)
+
+    await run_encoder(command)
+
     return web.Response(body=b"DONE\n")
+
+async def run_encoder(command):
+    cmd = "ffmpeg " + command
+    logger.info(cmd)
+    proc = await asyncio.create_subprocess_shell(
+        cmd,
+        stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.PIPE)
+
+    stdout, stderr = await proc.communicate()
+
+    logger.info(f'[{cmd!r} exited with {proc.returncode}]')
+    if stdout:
+        logger.info(f'[stdout]\n{stdout.decode()}')
+    if stderr:
+        logger.info(f'[stderr]\n{stderr.decode()}')
 
 def main(host, port):
     app = web.Application()
