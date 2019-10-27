@@ -116,21 +116,15 @@ async def healthcheck_storage(app):
         return status
 
 
-async def storage_connect_task():
-    await init_storage()
-
-
 async def start_background_tasks(app):
-    logger.debug("start storage_connect_task")
-    app["storage_connect_task"] = asyncio.get_event_loop().create_task(
-        storage_connect_task()
-    )
+    logger.debug("start init_storage")
+    app["init_storage"] = asyncio.get_event_loop().create_task(init_storage())
 
 
 async def cleanup_background_tasks(app):
-    logger.debug("cleanup storage_connect_task")
-    app["storage_connect_task"].cancel()
-    await app["storage_connect_task"]
+    logger.debug("cleanup init_storage")
+    app["init_storage"].cancel()
+    await app["init_storage"]
 
 
 def main(host, port):
