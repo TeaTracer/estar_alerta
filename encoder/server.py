@@ -2,6 +2,7 @@ import os
 import logging
 import asyncio
 import json
+import aiohttp
 from aiohttp import web
 
 logging.basicConfig(
@@ -18,16 +19,18 @@ class NoStorageError(Exception):
 
 async def healthcheck(request):
     logger.info("healthcheck %s", request)
-    status = b"OK\n"
-    return web.Response(body=status)
+    message = b"OK\n"
+    storage_status = await healthcheck_storage(request.app)
+    if storage_status != 200:
+        message = b"NOT OK\n"
+    return web.Response(body=message)
 
 
 async def on_shutdown(app):
     logger.info("on shutdown %s", app)
 
 
-async def on_startup(app):
-    logger.info("on startup %s", app)
+async def init_storage():
     minio_host = os.environ.get("MINIO_HOST")
     minio_port = int(os.environ.get("MINIO_PORT"))
     minio_access_key = os.environ.get("MINIO_ACCESS_KEY")
@@ -90,13 +93,51 @@ async def run_command(command):
     return proc.returncode
 
 
+async def healthcheck_storage(app):
+    minio_healthcheck_path = os.environ.get("MINIO_HEALTHCHECK_PATH")
+    minio_host = os.environ.get("MINIO_HOST")
+    minio_port = int(os.environ.get("MINIO_PORT"))
+    url = f"http://{minio_host}:{minio_port}{minio_healthcheck_path}"
+    logger.info("start healthcheck")
+    async with aiohttp.ClientSession(loop=app.loop) as session:
+        logger.info("start storage healthcheck %s", url)
+        try:
+            async with session.get(url, raise_for_status=False) as response:
+                status = response.status
+        except aiohttp.ClientError as error:
+            logger.error("storage healthcheck error %s", error)
+            status = 500
+        logging.info("storage healthcheck status %d", status)
+        if status != 200:
+            logging.error("storage disconnected")
+        return status
+
+
+async def storage_connect_task():
+    await init_storage()
+
+
+async def start_background_tasks(app):
+    logger.info("start storage_connect_task")
+    app["storage_connect_task"] = asyncio.get_event_loop().create_task(
+        storage_connect_task()
+    )
+
+
+async def cleanup_background_tasks(app):
+    logger.info("cleanup storage_connect_task")
+    app["storage_connect_task"].cancel()
+    await app["storage_connect_task"]
+
+
 def main(host, port):
     app = web.Application()
 
     app.router.add_route("GET", "/healthcheck/", healthcheck)
     app.router.add_route("POST", "/task/", task)
 
-    app.on_startup.append(on_startup)
+    app.on_startup.append(start_background_tasks)
+    app.on_cleanup.append(cleanup_background_tasks)
     app.on_shutdown.append(on_shutdown)
     logger.info("up at %s:%d", host, port)
     web.run_app(app, host=host, port=port, print=None)

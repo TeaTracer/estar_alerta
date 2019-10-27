@@ -15,6 +15,7 @@ services:
           MINIO_SECRET_KEY: aisuhfishfiasuhfwhf2389fhsofaoj
           MINIO_INIT_DELAY: 3
           MINIO_INIT_TRIES: 3
+          MINIO_HEALTHCHECK_PATH: /minio/health/live
     minio:
         image: minio/minio:RELEASE.2019-10-12T01-39-57Z
         hostname: minio
