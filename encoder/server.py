@@ -77,7 +77,7 @@ async def run_encoder(command):
 
 
 async def run_command(command):
-    logger.info(command)
+    logger.debug(command)
     proc = await asyncio.create_subprocess_shell(
         command, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
     )
@@ -98,16 +98,19 @@ async def healthcheck_storage(app):
     minio_host = os.environ.get("MINIO_HOST")
     minio_port = int(os.environ.get("MINIO_PORT"))
     url = f"http://{minio_host}:{minio_port}{minio_healthcheck_path}"
-    logger.info("start healthcheck")
+
+    logger.debug("start healthcheck")
     async with aiohttp.ClientSession(loop=app.loop) as session:
-        logger.info("start storage healthcheck %s", url)
+        logger.debug("start storage healthcheck %s", url)
+
         try:
             async with session.get(url, raise_for_status=False) as response:
                 status = response.status
         except aiohttp.ClientError as error:
-            logger.error("storage healthcheck error %s", error)
+            logger.debug("storage healthcheck error %s", error)
             status = 500
-        logging.info("storage healthcheck status %d", status)
+
+        logging.debug("storage healthcheck status %d", status)
         if status != 200:
             logging.error("storage disconnected")
         return status
@@ -118,14 +121,14 @@ async def storage_connect_task():
 
 
 async def start_background_tasks(app):
-    logger.info("start storage_connect_task")
+    logger.debug("start storage_connect_task")
     app["storage_connect_task"] = asyncio.get_event_loop().create_task(
         storage_connect_task()
     )
 
 
 async def cleanup_background_tasks(app):
-    logger.info("cleanup storage_connect_task")
+    logger.debug("cleanup storage_connect_task")
     app["storage_connect_task"].cancel()
     await app["storage_connect_task"]
 
