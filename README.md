@@ -1,30 +1,16 @@
 # estar_alerta
 Test video encoding system
 
-# Build
+# Makefile
 
-make docker
-
-# Run application without storage
-
-make run
-
-# Run application with storage (minio)
-
-make up
-
-# Test
-
-make test
-
-# Lint
-
-make lint
-
-# Format code
-
-make format
-
+```
+make docker - build docker image
+make run - run application without storage
+make up - run application and storage (minio) in docker compose
+make test - run tests in docker
+make lint - run linters
+make format - run black code formatter
+```
 
 # API
 
@@ -51,3 +37,10 @@ Include json in request body with object having "command" key and string value.
 curl -X POST localhost:8080/task/ -d '{"command": "-version"}'
 DONE
 ```
+
+
+# Roadmap
+
+* Specify allowed ffmpeg arguments and add them to /task/ json model
+* Add /storage/ GET and POST proxy to minio storage
+* Add PostgerSQL to store information about videos (sources and encoded)
