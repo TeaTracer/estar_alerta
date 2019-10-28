@@ -56,24 +56,33 @@ async def task(request):
     logger.info("task %s", request)
     try:
         data = await request.json()
+        if not isinstance(data, dict):
+            raise TypeError(
+                "task data should be dict, not {}".format(type(dict))
+            )
+        if "command" not in data:
+            raise ValueError("task data should contain command key")
         command = data["command"]
         if not isinstance(command, str):
             raise TypeError(
-                "task command should be str" ", not {}".format(type(command))
+                "task command should be str, not {}".format(type(command))
             )
-    except (TypeError, json.JSONDecodeError) as error:
+    except (ValueError, TypeError, json.JSONDecodeError) as error:
         logger.error(error)
         return web.Response(
             body=b"ERROR: " + repr(error).encode("utf-8") + b"\n", status=400
         )
 
-    await run_encoder(command)
+    message = b"DONE\n"
+    rc = await run_encoder(command)
+    if rc != 0:
+        message = b"ERROR\n"
 
-    return web.Response(body=b"DONE\n")
+    return web.Response(body=message)
 
 
 async def run_encoder(command):
-    await run_command("ffmpeg " + command)
+    return await run_command("ffmpeg " + command)
 
 
 async def run_command(command):
@@ -127,15 +136,25 @@ async def cleanup_background_tasks(app):
     await app["init_storage"]
 
 
-def main(host, port):
+def application(actions=True):
     app = web.Application()
 
     app.router.add_route("GET", "/healthcheck/", healthcheck)
     app.router.add_route("POST", "/task/", task)
 
+    if actions:
+        apply_actions(app)
+
+    return app
+
+
+def apply_actions(app):
     app.on_startup.append(start_background_tasks)
     app.on_cleanup.append(cleanup_background_tasks)
     app.on_shutdown.append(on_shutdown)
+
+
+def main(host, port):
     logger.info("up at %s:%d", host, port)
-    web.run_app(app, host=host, port=port, print=None)
+    web.run_app(application(), host=host, port=port, print=None)
     logger.info("down")

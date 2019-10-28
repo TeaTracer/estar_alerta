@@ -4,10 +4,13 @@ lint:
 format:
 	black --line-length 79 encoder
 
-run:
+run: docker
 	docker run -p 8080:8080 encoder
 
-up:
+test: docker
+	docker run -it encoder python3 encoder/test.py
+
+up: docker
 	docker-compose up
 
 docker:
