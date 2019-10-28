@@ -1,2 +1,10 @@
 # estar_alerta
-Video encoding system
+Test video encoding system
+
+# Build
+
+make docker
+
+# Run application
+
+make up

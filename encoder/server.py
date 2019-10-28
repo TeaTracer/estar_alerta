@@ -31,12 +31,12 @@ async def on_shutdown(app):
 
 
 async def init_storage():
-    minio_host = os.environ.get("MINIO_HOST")
-    minio_port = int(os.environ.get("MINIO_PORT"))
-    minio_access_key = os.environ.get("MINIO_ACCESS_KEY")
-    minio_secret_key = os.environ.get("MINIO_SECRET_KEY")
-    minio_init_delay = int(os.environ.get("MINIO_INIT_DELAY"))
-    minio_init_tries = int(os.environ.get("MINIO_INIT_TRIES"))
+    minio_host = os.environ.get("MINIO_HOST", "localhost")
+    minio_port = int(os.environ.get("MINIO_PORT", 9000))
+    minio_access_key = os.environ.get("MINIO_ACCESS_KEY", "ACCESS")
+    minio_secret_key = os.environ.get("MINIO_SECRET_KEY", "SECRET")
+    minio_init_delay = int(os.environ.get("MINIO_INIT_DELAY", 5))
+    minio_init_tries = int(os.environ.get("MINIO_INIT_TRIES", 3))
     command = (
         "mc config host add minio "
         f"http://{minio_host}:{minio_port} "
@@ -103,9 +103,9 @@ async def run_command(command):
 
 
 async def healthcheck_storage(app):
-    minio_healthcheck_path = os.environ.get("MINIO_HEALTHCHECK_PATH")
-    minio_host = os.environ.get("MINIO_HOST")
-    minio_port = int(os.environ.get("MINIO_PORT"))
+    minio_healthcheck_path = os.environ.get("MINIO_HEALTHCHECK_PATH", "/minio/health/live")
+    minio_host = os.environ.get("MINIO_HOST", "localhost")
+    minio_port = int(os.environ.get("MINIO_PORT", 9000))
     url = f"http://{minio_host}:{minio_port}{minio_healthcheck_path}"
 
     logger.debug("start healthcheck")
@@ -154,7 +154,7 @@ def apply_actions(app):
     app.on_shutdown.append(on_shutdown)
 
 
-def main(host, port):
-    logger.info("up at %s:%d", host, port)
-    web.run_app(application(), host=host, port=port, print=None)
+def main(host, port, actions=True):
+    logger.info("up at %s:%d actions %s", host, port, actions)
+    web.run_app(application(actions=actions), host=host, port=port, print=None)
     logger.info("down")

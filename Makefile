@@ -5,7 +5,7 @@ format:
 	black --line-length 79 encoder
 
 run: docker
-	docker run -p 8080:8080 encoder
+	docker run -p 8080:8080 -e "ACTIONS=0" encoder
 
 test: docker
 	docker run -it encoder python3 encoder/test.py
