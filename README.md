@@ -41,6 +41,15 @@ DONE
 
 # Roadmap
 
-* Specify allowed ffmpeg arguments and add them to /task/ json model
-* Add /storage/ GET and POST proxy to minio storage
-* Add PostgerSQL to store information about videos (sources and encoded)
+## Till 1 December
+* Add /storage/ GET and POST proxy to minio storage. ([#1][i1])
+* Specify allowed ffmpeg arguments and add them to /task/ json model ([#2][i2])
+
+## Till 1 February
+* Add PostgerSQL to store information about videos (sources and encoded) ([#3][i3])
+* Implement ffmpeg remote storage pipeline ([#4][i4])
+
+[i1]: https://github.com/TeaTracer/estar_alerta/issues/1
+[i2]: https://github.com/TeaTracer/estar_alerta/issues/2
+[i3]: https://github.com/TeaTracer/estar_alerta/issues/3
+[i4]: https://github.com/TeaTracer/estar_alerta/issues/4
